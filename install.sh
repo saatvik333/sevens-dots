@@ -362,27 +362,6 @@ install_base_tools() {
 }
 
 choose_aur_helper() {
-  info "Checking for existing AUR helpers..."
-  
-  # Check if yay or paru already exists
-  local has_yay=false
-  local has_paru=false
-  
-  if verify_binary yay; then
-    has_yay=true
-  fi
-  
-  if verify_binary paru; then
-    has_paru=true
-  fi
-  
-  # If both exist, let user choose
-  if [ "$has_yay" = true ] && [ "$has_paru" = true ]; then
-    echo ""
-    echo -e "${YELLOW}Both yay and paru are installed.${NC}"
-    echo "Which AUR helper would you like to use?"
-    echo "  1) yay"
-    echo "  2) paru"
   info "Checking for AUR helper..."
   
   if command -v yay &> /dev/null; then
