@@ -101,7 +101,7 @@ fatal() {
 }
 
 step() {
-  ((CURRENT_STEP++))
+  ((++CURRENT_STEP))
   echo ""
   echo -e "${CYAN}${BOLD}[Step $CURRENT_STEP/$TOTAL_STEPS]${NC} ${MAGENTA}$1${NC}"
   echo -e "${CYAN}─────────────────────────────────────────────────────────${NC}"
@@ -284,14 +284,14 @@ create_backup() {
       if [ -L "$target" ]; then
         # Warn about symlinks
         warn "Symlink detected: $folder -> $(readlink "$target")"
-        ((symlinks_found++))
+        ((++symlinks_found))
         # Remove symlink without backing up
         rm "$target"
         info "Removed symlink: $folder"
       elif cp -rL "$target" "$BACKUP_DIR/" 2> /dev/null; then
         rm -rf "$target"
         info "Backed up: $folder"
-        ((backed_up++))
+        ((++backed_up))
       else
         warn "Failed to backup: $folder"
       fi
@@ -997,13 +997,13 @@ create_symlinks() {
 
       if ln -s "$DOTDIR/$folder" "$target" 2>> "$LOG_FILE"; then
         info "Linked: $folder"
-        ((linked++))
+        ((++linked))
       else
         error "Failed to link: $folder (check log for details)"
       fi
     else
       info "Skipping: $folder (not found in repository)"
-      ((skipped++))
+      ((++skipped))
     fi
   done
 
