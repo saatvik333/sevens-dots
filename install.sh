@@ -383,49 +383,17 @@ choose_aur_helper() {
     echo "Which AUR helper would you like to use?"
     echo "  1) yay"
     echo "  2) paru"
-    echo ""
-    read -p "Enter your choice (1/2) [default: 1]: " -r
-    echo
-    
-    if [[ $REPLY == "2" ]]; then
-      AUR_HELPER="paru"
-      msg "Using paru as AUR helper."
-    else
-      AUR_HELPER="yay"
-      msg "Using yay as AUR helper."
-    fi
-    return 0
-  fi
+  info "Checking for AUR helper..."
   
-  # If only one exists, use it
-  if [ "$has_yay" = true ]; then
+  if command -v yay &> /dev/null; then
     AUR_HELPER="yay"
     msg "yay AUR helper already installed."
     return 0
   fi
   
-  if [ "$has_paru" = true ]; then
-    AUR_HELPER="paru"
-    msg "paru AUR helper already installed."
-    return 0
-  fi
-  
-  # Neither exists, ask user which to install
-  echo ""
-  echo -e "${BLUE}Choose your preferred AUR helper:${NC}"
-  echo "  1) yay   - Yet Another Yogurt (popular, feature-rich)"
-  echo "  2) paru  - Pacman AUR helper (modern, fast, written in Rust)"
-  echo ""
-  read -p "Enter your choice (1/2) [default: 1]: " -r
-  echo
-  
-  if [[ $REPLY == "2" ]]; then
-    AUR_HELPER="paru"
-    install_paru
-  else
-    AUR_HELPER="yay"
-    install_yay
-  fi
+  # If yay is not installed, install it
+  AUR_HELPER="yay"
+  install_yay
 }
 
 install_yay() {
@@ -464,41 +432,6 @@ install_yay() {
   fi
 }
 
-install_paru() {
-  info "Installing paru AUR helper..."
-
-  # Try installing from official repos first (some distros include it)
-  if sudo pacman -S --noconfirm paru >> "$LOG_FILE" 2>&1; then
-    msg "paru installed from official repository."
-    return 0
-  fi
-
-  # If that fails, build from AUR
-  info "paru not in official repos, building from AUR..."
-  local paru_dir
-  paru_dir=$(mktemp -d)
-
-  info "Cloning paru repository (this may take a moment)..."
-  if ! retry_command 3 "git clone --depth=1 https://aur.archlinux.org/paru-bin.git '$paru_dir' >> '$LOG_FILE' 2>&1"; then
-    rm -rf "$paru_dir"
-    fatal "Failed to clone paru repository after multiple attempts."
-  fi
-
-  # Build in subshell but handle errors properly
-  info "Building paru package (this may take a few minutes)..."
-  if ! (cd "$paru_dir" && makepkg -si --noconfirm >> "$LOG_FILE" 2>&1); then
-    rm -rf "$paru_dir"
-    fatal "Failed to build and install paru."
-  fi
-
-  rm -rf "$paru_dir"
-
-  if verify_binary paru; then
-    msg "paru installed successfully from AUR."
-  else
-    fatal "paru installation completed but binary not found."
-  fi
-}
 
 install_pacman_packages() {
   info "Installing official repository packages..."
@@ -907,7 +840,7 @@ set_default_shell() {
   fi
 
   # Change the shell
-  if chsh -s "$selected_shell" >> "$LOG_FILE" 2>&1; then
+  if chsh -s "$selected_shell"; then
     msg "Default shell changed to $shell_name successfully."
     warn "You'll need to log out and back in for this to take effect."
   else
@@ -1015,7 +948,7 @@ create_symlinks() {
 install_wallpapers() {
   if [ -d "$DOTDIR/wallpapers" ]; then
     info "Installing wallpapers..."
-    local wallpaper_dir="$HOME/Pictures/wallpapers"
+    local wallpaper_dir="$HOME/Pictures/Wallpapers"
     mkdir -p "$wallpaper_dir"
 
     shopt -s nullglob
