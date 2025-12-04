@@ -1194,9 +1194,6 @@ EOF
 }
 
 main() {
-  # Ensure log directory exists
-  mkdir -p "$(dirname "$LOG_FILE")"
-
   print_header
 
   # Pre-flight checks
@@ -1289,6 +1286,10 @@ main() {
 # ==========================
 # ERROR HANDLING
 # ==========================
+
+# Ensure log directory exists BEFORE setting traps or running main
+# This prevents silent failures when error handlers try to log
+mkdir -p "$(dirname "$LOG_FILE")"
 
 trap 'offer_restore; cleanup_on_exit' ERR EXIT INT TERM
 
