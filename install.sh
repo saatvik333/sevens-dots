@@ -415,7 +415,7 @@ install_yay() {
 install_pacman_packages() {
   info "Installing official repository packages..."
   info "This may take several minutes..."
-  if sudo pacman -S --needed --noconfirm "${PACMAN_PACKAGES[@]}" >> "$LOG_FILE" 2>&1; then
+  if sudo pacman -S --needed --noconfirm "${PACMAN_PACKAGES[@]}" 2>&1 | tee -a "$LOG_FILE"; then
     msg "Official packages installed successfully."
   else
     fatal "Failed to install official repository packages."
@@ -425,7 +425,7 @@ install_pacman_packages() {
 install_aur_packages() {
   info "Installing AUR packages using $AUR_HELPER..."
   info "This may take several minutes..."
-  if "$AUR_HELPER" -S --needed --noconfirm "${AUR_PACKAGES[@]}" >> "$LOG_FILE" 2>&1; then
+  if "$AUR_HELPER" -S --needed --noconfirm "${AUR_PACKAGES[@]}" 2>&1 | tee -a "$LOG_FILE"; then
     msg "AUR packages installed successfully."
   else
     fatal "Failed to install AUR packages."
