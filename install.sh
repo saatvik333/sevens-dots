@@ -43,6 +43,7 @@ readonly AUR_PACKAGES=(
   eza
   niri-switch
   ttf-nerd-fonts-symbols
+  gtk-engine-murrine
 )
 
 # Official repository packages
@@ -50,7 +51,7 @@ readonly PACMAN_PACKAGES=(
   niri waybar fish fastfetch mako alacritty kitty starship neovim yazi
   zathura zathura-pdf-mupdf ttf-jetbrains-mono-nerd 
   qt5-wayland qt6-wayland polkit-gnome ffmpeg imagemagick unzip jq
-  swww gtklock rofi curl gtk-engine-murrine libnotify
+  swww gtklock rofi curl libnotify
 )
 
 # ==========================
