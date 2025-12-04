@@ -42,14 +42,15 @@ readonly AUR_PACKAGES=(
   dust
   eza
   niri-switch
+  ttf-nerd-fonts-symbols
 )
 
 # Official repository packages
 readonly PACMAN_PACKAGES=(
   niri waybar fish fastfetch mako alacritty kitty starship neovim yazi
-  zathura zathura-pdf-mupdf ttf-jetbrains-mono-nerd ttf-font-awesome
+  zathura zathura-pdf-mupdf ttf-jetbrains-mono-nerd 
   qt5-wayland qt6-wayland polkit-gnome ffmpeg imagemagick unzip jq
-  swww gtklock rofi curl gtk-engine-murrine
+  swww gtklock rofi curl gtk-engine-murrine libnotify
 )
 
 # ==========================
