@@ -71,7 +71,7 @@ readonly NC='\033[0m'
 # ==========================
 
 log() {
-  echo "[$(date +'%Y-%m-%d %H:%M:%S')] $*" >> "$LOG_FILE"
+  echo "[$(date +'%Y-%m-%d %H:%M:%S')] $*" >> "$LOG_FILE" 2>/dev/null || true
 }
 
 msg() {
