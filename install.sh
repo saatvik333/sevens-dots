@@ -51,8 +51,9 @@ readonly AUR_PACKAGES=(
   eza
   niri-switch
   ttf-nerd-fonts-symbols
-  gtk-engine-murrine
   pavucontrol
+  thunar
+  minizip
 )
 
 # Official repository packages
