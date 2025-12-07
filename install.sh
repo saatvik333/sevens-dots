@@ -25,7 +25,7 @@ AUR_HELPER=""
 
 # Progress tracking
 CURRENT_STEP=0
-readonly TOTAL_STEPS=18
+readonly TOTAL_STEPS=19
 
 # Installation summary tracking
 declare -a INSTALL_SUMMARY=()
@@ -40,7 +40,7 @@ SUDO_PID=""
 # Expected configuration folders in the repo
 readonly CONFIG_FOLDERS=(
   niri waybar fish zsh fastfetch mako alacritty kitty starship
-  nvim yazi vicinae gtklock zathura wallust rofi
+  nvim yazi vicinae gtklock zathura wallust rofi scripts
 )
 
 # AUR packages to install
@@ -351,6 +351,7 @@ check_sudo() {
   msg "Sudo privileges verified."
 }
 
+
 verify_binary() {
   local binary="$1"
   if ! command -v "${binary}" &>/dev/null; then
@@ -498,7 +499,9 @@ install_yay() {
     fatal "Failed to build and install yay."
   fi
 
+  info "Cleaning up yay build directory..."
   cleanup_temp_files
+  TEMP_BUILD_DIR=""
 
   if verify_binary yay; then
     msg "yay installed successfully from AUR."
@@ -516,6 +519,32 @@ install_pacman_packages() {
   else
     fatal "Failed to install official repository packages."
   fi
+}
+
+cargo_fix() {
+  info "Checking Rust toolchain configuration..."
+  
+  # Check if rustup is installed
+  if ! command -v rustup &> /dev/null; then
+    info "rustup not found, installing..."
+    if sudo pacman -S --needed --noconfirm rustup >> "$LOG_FILE" 2>&1; then
+      msg "rustup installed successfully."
+    else
+      warn "Failed to install rustup. Some AUR packages may fail to build."
+      return 1
+    fi
+  fi
+  
+  # Set default toolchain to stable
+  info "Setting Rust default toolchain to stable..."
+  if rustup default stable >> "$LOG_FILE" 2>&1; then
+    msg "Rust toolchain configured: stable (default)"
+  else
+    warn "Failed to set default Rust toolchain. Some AUR packages may fail to build."
+    return 1
+  fi
+  
+  return 0
 }
 
 install_aur_packages() {
@@ -831,6 +860,27 @@ configure_shells() {
   if [[ ${#configured_shells[@]} -gt 0 ]]; then
     msg "Shell configuration(s) ready: ${configured_shells[*]}"
   fi
+
+  if [[ "${CONFIGURE_ZSH}" == "true" ]]; then
+    info "Configuring Zsh..."
+    local zshrc="${HOME}/.zshrc"
+    
+    # Backup existing .zshrc if it exists and is not a symlink to our config
+    if [[ -f "${zshrc}" ]] && ! grep -q "source.*config.zsh" "${zshrc}"; then
+      mv "${zshrc}" "${zshrc}.backup.$(date +%s)"
+      info "Backed up existing .zshrc"
+    fi
+
+    # Create .zshrc with just the source command and skip wizard magic
+    cat > "${zshrc}" <<EOF
+# Source sevens-dots configuration
+source \${HOME}/.config/zsh/config.zsh
+
+# Prevent zsh-newuser-install wizard
+zstyle :compinstall filename '/home/${USER}/.zshrc'
+EOF
+    msg "Configured .zshrc to source config.zsh"
+  fi
 }
 
 set_default_shell() {
@@ -1042,39 +1092,6 @@ install_wallpapers() {
   fi
 }
 
-install_scripts() {
-  if [[ -d "${DOTDIR}/scripts" ]]; then
-    info "Installing scripts..."
-    local bin_dir="${HOME}/.local/bin"
-    mkdir -p "${bin_dir}"
-
-    shopt -s nullglob
-    local scripts=("${DOTDIR}/scripts/"*)
-    shopt -u nullglob
-
-    if [[ ${#scripts[@]} -gt 0 ]]; then
-      if cp -r "${DOTDIR}/scripts/"* "${bin_dir}/" 2>/dev/null; then
-        find "${bin_dir}" -type f -name "*.sh" -exec chmod +x {} \; 2>/dev/null || true
-        find "${bin_dir}" -type f ! -name "*.*" -exec chmod +x {} \; 2>/dev/null || true
-        msg "Scripts installed to: ${bin_dir}"
-
-        if [[ ":${PATH}:" != *":${bin_dir}:"* ]]; then
-          warn "~/.local/bin is not in your PATH."
-          info "Add the appropriate line to your shell profile:"
-          printf "  For zsh (~/.zshrc):  export PATH=\"\$HOME/.local/bin:\$PATH\"\n"
-          printf "  For fish (~/.config/fish/config.fish):  set -gx PATH \$HOME/.local/bin \$PATH\n"
-        fi
-      else
-        warn "Failed to copy scripts."
-      fi
-    else
-      info "No scripts found in repository."
-    fi
-  else
-    info "No scripts directory found in repository."
-  fi
-}
-
 # ==========================
 # SYSTEMD SERVICE MANAGEMENT
 # ==========================
@@ -1225,6 +1242,10 @@ main() {
   choose_aur_helper
   add_summary "AUR helper configured: ${AUR_HELPER}"
 
+  step "Configuring Rust Toolchain"
+  cargo_fix
+  add_summary "Rust toolchain configured"
+  
   step "Installing Official Repository Packages"
   install_pacman_packages
   add_summary "Official packages installed (niri, waybar, fish, etc.)"
@@ -1273,10 +1294,6 @@ main() {
   install_wallpapers
   add_summary "Wallpapers installed to ~/Pictures/wallpapers"
   
-  step "Installing Scripts"
-  install_scripts
-  add_summary "Scripts installed to ~/.local/bin"
-
   step "Configuring System Services"
   create_systemd_services
   add_summary "Systemd services configured"
